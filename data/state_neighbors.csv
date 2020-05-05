@@ -1,0 +1,52 @@
+state,neigh_state
+Alabama,"['Georgia', 'Mississippi', 'Tennessee']"
+Alaska,['Washington']
+Arizona,"['California', 'Colorado', 'New Mexico', 'Nevada', 'Utah']"
+Arkansas,"['Louisiana', 'Missouri', 'Mississippi', 'Oklahoma', 'Tennessee', 'Texas']"
+California,"['Hawaii', 'Nevada', 'Oregon']"
+Colorado,"['Kansas', 'Nebraska', 'New Mexico', 'Oklahoma', 'Utah', 'Wyoming']"
+Connecticut,"['Massachusetts', 'New York', 'Rhode Island']"
+Delaware,"['Maryland', 'New Jersey', 'Pennsylvania']"
+District of Columbia,"['Maryland', 'Virginia']"
+Florida,['Georgia']
+Georgia,"['North Carolina', 'South Carolina', 'Tennessee']"
+Idaho,"['Montana', 'Nevada', 'Oregon', 'Utah', 'Washington', 'Wyoming']"
+Illinois,"['Indiana', 'Kentucky', 'Missouri', 'Wisconsin']"
+Indiana,"['Kentucky', 'Michigan', 'Ohio']"
+Iowa,"['Illinois', 'Minnesota', 'Missouri', 'Nebraska', 'South Dakota', 'Wisconsin']"
+Kansas,"['Missouri', 'Nebraska', 'Oklahoma']"
+Kentucky,"['Missouri', 'Ohio', 'Tennessee', 'Virginia', 'West Virginia']"
+Louisiana,"['Mississippi', 'Texas']"
+Maine,['New Hampshire']
+Maryland,"['Pennsylvania', 'Virginia', 'West Virginia']"
+Massachusetts,"['New Hampshire', 'New York', 'Rhode Island', 'Vermont']"
+Michigan,"['Ohio', 'Wisconsin']"
+Minnesota,"['North Dakota', 'South Dakota', 'Wisconsin']"
+Mississippi,['Tennessee']
+Missouri,"['Nebraska', 'Oklahoma', 'Tennessee']"
+Montana,"['North Dakota', 'South Dakota', 'Wyoming']"
+Nebraska,"['South Dakota', 'Wyoming']"
+Nevada,"['Oregon', 'Utah']"
+New Hampshire,['Vermont']
+New Jersey,"['New York', 'Pennsylvania']"
+New Mexico,"['Oklahoma', 'Texas', 'Utah']"
+New York,"['Pennsylvania', 'Vermont']"
+North Carolina,"['South Carolina', 'Tennessee', 'Virginia']"
+North Dakota,['South Dakota']
+Ohio,"['Pennsylvania', 'West Virginia']"
+Oklahoma,['Texas']
+Oregon,['Washington']
+Pennsylvania,['West Virginia']
+South Dakota,['Wyoming']
+Tennessee,['Virginia']
+Utah,['Wyoming']
+Virginia,['West Virginia']
+Hawaii,['California']
+Rhode Island,"['Massachusetts', 'Connecticut']"
+South Carolina,"['North Carolina', 'Georgia']"
+Texas,"['Louisiana', 'Oklahoma', 'New Mexico', 'Arkansas']"
+Vermont,"['Massachusetts', 'New York', 'New Hampshire']"
+Washington,"['Maryland', 'Virginia']"
+West Virginia,"['Ohio', 'Virginia', 'Kentucky', 'Maryland', 'Pennsylvania']"
+Wisconsin,"['Michigan', 'Minnesota', 'Iowa', 'Illinois']"
+Wyoming,"['Montana', 'Idaho', 'Utah', 'Colorado', 'Nebraska', 'South Dakota']"
