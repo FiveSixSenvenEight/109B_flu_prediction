@@ -93,6 +93,6 @@ def get_data(state, future_week, with_gt=False, predictor_state=None):
                 pd.DataFrame(train_dfs[p].iloc[:, 1]), pd.DataFrame(test_dfs[p].iloc[:, 1]))
             X_train[p], X_test[p] = state_train, state_test
             
-    X_all, y_all = pd.concat([X_train, X_test]), pd.concat([y_train, y_test])
+    X_all, y_all = pd.concat([X_train, X_test], ignore_index=True), pd.concat([y_train.iloc[:, 0], y_test.iloc[:, 0]], ignore_index=True)
     
     return X_train, X_test, X_all, y_train, y_test, y_all, scaler
