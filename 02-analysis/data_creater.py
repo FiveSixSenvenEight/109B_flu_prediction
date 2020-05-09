@@ -111,6 +111,7 @@ def get_y(df_train, df_test, target_lag):
     # Flu for the current state
     target_train = df_train[[f'target_{target_lag}']].values
     target_test = df_test[[f'target_{target_lag}']].values
+    target_train, target_test = minmax_transform(target_train, target_test)
     target_all = np.concatenate((target_train, target_test))
     return target_train, target_test, target_all
 
