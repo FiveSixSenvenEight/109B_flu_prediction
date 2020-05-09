@@ -2,6 +2,7 @@ import os, pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.linear_model import Ridge, Lasso, LinearRegression, LassoCV, RidgeCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -19,7 +20,7 @@ from tensorflow.keras.models import model_from_json
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.layers import Input, SimpleRNN, Embedding, Dense, TimeDistributed, GRU, \
-                                    Dropout, Bidirectional, Conv1D, BatchNormalization
+                                    Dropout, Bidirectional, Conv1D, BatchNormalization, LSTM
 
 print(tf.keras.__version__)
 print(tf.__version__)
