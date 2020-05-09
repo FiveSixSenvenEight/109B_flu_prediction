@@ -1,29 +1,19 @@
-import os, pickle
+import os
+from ast import literal_eval
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.linear_model import Ridge
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, RandomizedSearchCV
 from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima_model import ARIMA
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import ElasticNet
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+import seaborn as sns
+from data_creater import *
 from sklearn.preprocessing import MinMaxScaler
-
-import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras import backend
-from tensorflow.keras import Model, Sequential
-from tensorflow.keras.models import model_from_json
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam, RMSprop
-from tensorflow.keras.layers import Input, SimpleRNN, Embedding, Dense, TimeDistributed, GRU, \
-                                    Dropout, Bidirectional, Conv1D, BatchNormalization
-
-print(tf.keras.__version__)
-print(tf.__version__)
-
 
 # Load in dfs for all states
 all_states = [] # List of all the states
@@ -43,117 +33,65 @@ for root,dirs,files in os.walk(test_path):
         if file.endswith('csv'):
             state = file[:-4]
             test_dfs[state] = pd.read_csv(test_path + file)
-            
-# Load in the entire flu data for all states
-flu_df = pd.read_csv('../data/clean_flu_data.csv')
 
-# Helper functions
-def minmax_transform(X_train, X_test):
+# Helper functions-normalize the data
+def minmax_transform(X_train, X_test, return_scaler=False):
     """ Uses MinMaxScaler to scale X_train and X_test
         to 0 and 1, scaled using X_train
     """
-    scalar = MinMaxScaler().fit(X_train)
-    X_test = scalar.transform(X_test)
-    X_train = scalar.transform(X_train)
-    return X_train, X_test
+    col_name = X_train.columns
+    scaler = MinMaxScaler().fit(X_train)
+    X_test = scaler.transform(X_test)
+    X_train = scaler.transform(X_train)
+    if return_scaler:
+        return pd.DataFrame(X_train), pd.DataFrame(X_test), scaler
+    else:
+        return pd.DataFrame(X_train), pd.DataFrame(X_test)
 
-
-def get_X(option, state, df_train, df_test, predictor_state_list):
-    """ Get data according to option
-    """ 
-    assert option in ['TS', 'GT', 'other_states']
-
-    # Modify flu_df
-    flu_df_train = pd.merge(flu_df.drop(state,1), df_train[['date']], on = 'date', how = 'right')
-    flu_df_test = pd.merge(flu_df.drop(state,1), df_test[['date']], on = 'date', how = 'right')
-    flu_df_train = flu_df_train.drop('date', 1)
-    flu_df_test = flu_df_test.drop('date', 1)
-
-    # Drop all target columns and date column
-    target_cols = [c for c in df_train.columns if c.startswith('target')]
-    drop_cols = target_cols + ['date']
-    df_train = df_train.drop(drop_cols,1)
-    df_test = df_test.drop(drop_cols,1)
-
-    # Flu for the current state
-    flu_colname = state.lower().replace(" ","_")+"_flu"
-
-    if option == 'TS':
-        X_train_ts = df_train[[flu_colname]]
-        X_test_ts = df_test[[flu_colname]]
-        X_train_ts, X_test_ts = minmax_transform(X_train_ts, X_test_ts)
-        X_all_ts = np.concatenate((X_train_ts, X_test_ts))
-        return X_train_ts, X_test_ts, X_all_ts
+def get_data(state, future_week, with_gt=False, predictor_state=None):
+    '''
+    state: state to predict
+    future_week: the future week to forcast, chosen from [1,2,4,8]
+    with_gt: whether to include GT data
+    predictor_state: list of states as predictors
+    '''
+    assert future_week in [1,2,4,8]
     
-    if option == 'GT':
-        gt_columns = list(df_train.columns.difference([flu_colname]))
-        X_train_gt = df_train[gt_columns]
-        X_test_gt = df_test[gt_columns]
-        X_train_gt, X_test_gt = minmax_transform(X_train_gt, X_test_gt)
-        X_all_gt = np.vstack((X_train_gt, X_test_gt))
-        return X_train_gt, X_test_gt, X_all_gt
+    train, test = train_dfs[state], test_dfs[state]
+    X_train, X_test = pd.DataFrame(), pd.DataFrame()
     
-    if option == 'other_states':
-        # Default predictor_state_list to be all states other than input state
-        if predictor_state_list == None:
-            predictor_state_list = flu_df_train.columns
-        X_train_states = flu_df_train[predictor_state_list]
-        X_test_states = flu_df_test[predictor_state_list]
-        X_train_states, X_test_states = minmax_transform(X_train_states, X_test_states)
-        X_all_state = np.vstack((X_train_states, X_test_states))
-        return X_train_states, X_test_states, X_all_state
-
-
-def get_y(df_train, df_test, target_lag):
-    """Get the target with the desired target_lag
-    """
-    assert target_lag in [1,2,4,8]
-    # Flu for the current state
-    target_train = df_train[[f'target_{target_lag}']].values
-    target_test = df_test[[f'target_{target_lag}']].values
-    target_all = np.concatenate((target_train, target_test))
-    return target_train, target_test, target_all
-
-
-def get_data(  state,
-               option_list = ['TS'],
-               target_lag = 1,
-               predictor_state_list = None
-               ):
-    """ Create desired dataset according to option_list for state
-        Inputs:
-            state: state name 
-            option_list: one of ['TS', 'GT', 'other_states'], corresponding to
-                time series, google trends, other states flu data
-            target_lag: target lag, one of 1,2,4,8
-            predictor_state_list: list of other states to consider
-
-
-    """
-    # Get the appropriate df_train and df_test given state
-    df_train = train_dfs[state]
-    df_test = test_dfs[state]
-
-    # Get all data according to option_list
-    X_train, X_test, X_all = get_X(option_list[0], state, df_train, df_test, predictor_state_list)
-
-    for option in option_list[1:]:
-        X_train_t, X_test_t, X_all_t = get_X(option, state, df_train, df_test, predictor_state_list)
-        X_train = np.hstack((X_train,X_train_t))
-        X_test = np.hstack((X_test,X_test_t))
-        X_all = np.hstack((X_all,X_all_t))
-
-    # Get the target
-    y_train, y_test, y_all = get_y(df_train, df_test, target_lag)
-
-    # Return X, y
-    return pd.DataFrame(X_train), pd.DataFrame(X_test), pd.DataFrame(X_all), pd.DataFrame(y_train), pd.DataFrame(y_test), pd.DataFrame(y_all)
-
-
-
-
-
-
-
-
-
+    # if not specified, only include the flu data as predictor
+    flu_train, flu_test, scaler = minmax_transform(pd.DataFrame(train.iloc[:, 1]), pd.DataFrame(test.iloc[:, 1]),
+                                                  return_scaler=True)
+    X_train['flu_data'], X_test['flu_data'] = flu_train[0], flu_test[0]
+    target = 'target_' + str(future_week)
+    y_train, y_test = pd.DataFrame(scaler.transform(train[[target]])), test[[target]]
+    
+    if with_gt and predictor_state:
+        for p in predictor_state:
+            # flu
+            state_train, state_test = train_dfs[p], test_dfs[p]
+            flu_train, flu_test = minmax_transform(
+                pd.DataFrame(state_train.iloc[:, 1]), pd.DataFrame(state_test.iloc[:, 1]))
+            X_train[p], X_test[p] = flu_train, flu_test
+            # google trend
+            X_train_gt, X_test_gt = state_train.iloc[:, 2:-4], state_test.iloc[:, 2:-4] 
+            gt_train, gt_test = minmax_transform(X_train_gt, X_test_gt)
+            for i, col in enumerate(X_train_gt.columns):
+                X_train[p+' '+col], X_test[p+' '+col] = gt_train[i], gt_test[i]
+    
+    elif with_gt: # include google trend data
+        X_train_gt, X_test_gt = train.iloc[:, 2:-4], test.iloc[:, 2:-4] # google trend data
+        gt_train, gt_test = minmax_transform(X_train_gt, X_test_gt)
+        for i, col in enumerate(X_train_gt.columns):
+            X_train[col], X_test[col] = gt_train[i], gt_test[i]
+            
+    elif predictor_state:
+        for p in predictor_state:
+            state_train, state_test = minmax_transform(
+                pd.DataFrame(train_dfs[p].iloc[:, 1]), pd.DataFrame(test_dfs[p].iloc[:, 1]))
+            X_train[p], X_test[p] = state_train, state_test
+            
+    X_all, y_all = pd.concat([X_train, X_test]), pd.concat([y_train, y_test])
+    
+    return X_train, X_test, X_all, y_train, y_test, y_all, scaler
