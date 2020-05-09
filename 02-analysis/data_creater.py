@@ -84,6 +84,7 @@ def get_X(option, state, df_train, df_test, predictor_state_list):
         X_train_ts, X_test_ts = minmax_transform(X_train_ts, X_test_ts)
         X_all_ts = np.concatenate((X_train_ts, X_test_ts))
         return X_train_ts, X_test_ts, X_all_ts
+    
     if option == 'GT':
         gt_columns = list(df_train.columns.difference([flu_colname]))
         X_train_gt = df_train[gt_columns]
@@ -91,6 +92,7 @@ def get_X(option, state, df_train, df_test, predictor_state_list):
         X_train_gt, X_test_gt = minmax_transform(X_train_gt, X_test_gt)
         X_all_gt = np.vstack((X_train_gt, X_test_gt))
         return X_train_gt, X_test_gt, X_all_gt
+    
     if option == 'other_states':
         # Default predictor_state_list to be all states other than input state
         if predictor_state_list == None:
@@ -145,7 +147,7 @@ def get_data(  state,
     y_train, y_test, y_all = get_y(df_train, df_test, target_lag)
 
     # Return X, y
-    return X_train, X_test, X_all, y_train, y_test, y_all
+    return pd.DataFrame(X_train), pd.DataFrame(X_test), pd.DataFrame(X_all), pd.DataFrame(y_train), pd.DataFrame(y_test), pd.DataFrame(y_all)
 
 
 
