@@ -48,6 +48,7 @@ def minmax_transform(X_train, X_test, return_scaler=False):
     else:
         return pd.DataFrame(X_train), pd.DataFrame(X_test)
 
+
 def get_data(state, future_week, with_gt=False, predictor_state=None):
     '''
     state: state to predict
